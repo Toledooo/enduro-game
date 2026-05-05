@@ -11,6 +11,7 @@ def main():
     clock = pygame.time.Clock()
 
     track = Track()
+    player = Player()
     track.speed = 2 # Velocidade inicial da estrada
     running = True
 
@@ -21,9 +22,16 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            player.move_left()
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            player.move_right()
         
         track.update()
         track_rect = track.draw(screen)
+        player_rect = player.draw(screen)
 
         pygame.display.flip() # Atualiza a tela
         clock.tick(FPS) # Controla a taxa de quadros por segundo
