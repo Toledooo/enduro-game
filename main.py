@@ -1,7 +1,8 @@
 import pygame
 import sys
-from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, WHITE, BLACK, DARK_GRAY
+from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, DARK_GRAY
 from src.entities.track import Track
+from src.entities.player import Player
 
 def main():
     pygame.init()
@@ -10,7 +11,7 @@ def main():
     clock = pygame.time.Clock()
 
     track = Track()
-
+    track.speed = 2 # Velocidade inicial da estrada
     running = True
 
     while running:
@@ -20,10 +21,9 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-
-
-        screen.fill(DARK_GRAY)
-        track.draw(screen)
+        
+        track.update()
+        track_rect = track.draw(screen)
 
         pygame.display.flip() # Atualiza a tela
         clock.tick(FPS) # Controla a taxa de quadros por segundo
