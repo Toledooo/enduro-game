@@ -9,7 +9,7 @@ class Track:
         self.speed = 0
         self.lines_y = []
         self.spawn_timer = 0
-        self.spawn_delay_base = 20  # Tempo base de geração (em frames)
+        self.spawn_delay_base = 19  # Tempo base de geração (em frames)
 
     def update(self):
         # Se o carro tiver velocidade, as faixas se movem para baixo
@@ -45,10 +45,10 @@ class Track:
 
         # Criação da estrada usando um polígono
         road_polygon = [
-            ((SCREEN_WIDTH // 2) - (self.road_width_horizon // 2), self.horizon_y), # Ponto esquerdo no horizonte
-            ((SCREEN_WIDTH // 2) + (self.road_width_horizon // 2), self.horizon_y), # Ponto direito no horizonte
-            ((SCREEN_WIDTH // 2) + (self.road_width // 2), SCREEN_HEIGHT), # Ponto direito próximo
-            ((SCREEN_WIDTH // 2) - (self.road_width // 2), SCREEN_HEIGHT) # Ponto esquerdo próximo
+            ((SCREEN_WIDTH // 2) - (self.road_width_horizon // 2.5), self.horizon_y), # Ponto esquerdo no horizonte
+            ((SCREEN_WIDTH // 2) + (self.road_width_horizon // 2.5), self.horizon_y), # Ponto direito no horizonte
+            ((SCREEN_WIDTH // 2) + (self.road_width // 2.5), SCREEN_HEIGHT), # Ponto direito próximo
+            ((SCREEN_WIDTH // 2) - (self.road_width // 2.5), SCREEN_HEIGHT) # Ponto esquerdo próximo
         ]
 
         # Desenha a estrada
@@ -63,8 +63,8 @@ class Track:
             scale = (line - self.horizon_y) / (SCREEN_HEIGHT - self.horizon_y)
             
             # A largura e altura da faixa crescem conforme ela desce
-            line_width = max(4, int(30 * scale))
-            line_height = max(2, int(60 * scale))
+            line_width = max(4, int(20 * scale))
+            line_height = max(2, int(40 * scale))
             
             # Desenha a faixa no centro do X, na altura Y atual
             line_rect = pygame.Rect((SCREEN_WIDTH // 2) - (line_width // 2), int(line), line_width, line_height)

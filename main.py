@@ -25,9 +25,9 @@ def main():
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            player.move_left()
+            player.move_left(track_left=track_rect.left)
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            player.move_right()
+            player.move_right(track_right=track_rect.right)
         
         track.update()
         track_rect = track.draw(screen)
