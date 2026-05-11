@@ -12,3 +12,4 @@ DARK_GRAY = (50, 50, 50)
 SKY_COLOR = (100, 150, 255) # Azul claro
 GRASS_COLOR = (50, 150, 50) # Verde escuro
 ROAD_COLOR = (100, 100, 100) # Cinza médio
+BORDER_COLOR = (200, 200, 200) # Cinza claro para as bordas da estrada
