@@ -7,17 +7,15 @@ class Track:
         self.road_width = SCREEN_WIDTH * 0.8 # Largura da estrada próxima ao jogador
         self.horizon_road_width = 0 # Largura da estrada no horizonte
         self.speed = 0
-        self.lines_y = []
-        self.spawn_timer = 0
+        self.lines_y = [] # Lista para armazenar as posições Y das faixas centrais que se movem para baixo
+        self.spawn_timer = 0 # Timer para controlar o tempo entre o spawn das faixas centrais
         self.spawn_delay_base = 19  # Tempo base de geração (em frames)
         self.current_curve = 0.0 # Curva atual da estrada (negativa para esquerda, positiva para direita)
-        self.target_curve = 0.0 
+        self.target_curve = 0.0  # Curva alvo que a estrada deve alcançar
         self.track_state = "STRAIGHT" # O jogo sempre começa em uma reta
         self.state_timer = 0
-        # Define o tempo da primeira reta: entre 10 e 12 segundos (x 60 FPS)
-        self.straight_durations = [10 * 60, 12 * 60] 
-        # Define o tempo da primeira curva: entre 3 e 5 segundos (x 60 FPS)
-        self.curve_durations = [3 * 60, 5 * 60]
+        self.straight_durations = [10 * 60, 12 * 60] # Define o tempo da primeira reta: entre 10 e 12 segundos (x 60 FPS)
+        self.curve_durations = [3 * 60, 5 * 60] # Define o tempo da primeira curva: entre 3 e 5 segundos (x 60 FPS)
         self.curve_choices = [-0.3, 0.3] # Curvas possíveis: esquerda, direita ou reta
 
     def update(self):
