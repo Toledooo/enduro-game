@@ -1,8 +1,13 @@
+import pathlib
+import random
 import pygame
 import sys
-from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, DARK_GRAY
+from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from src.entities.track import Track
 from src.entities.player import Player
+from src.entities.npc import NPC
+from src.ui.hud import HUD
+from src.ui.menu import Menu
 
 def main():
     pygame.init()
@@ -10,9 +15,42 @@ def main():
     pygame.display.set_caption("Enduro Game")
     clock = pygame.time.Clock()
 
-    track = Track()
-    player = Player()
-    track.speed = 2 # Velocidade inicial da estrada
+    # Carrega as imagens dos NPCs
+    npc_images = []
+    image_paths = list(pathlib.Path("assets/images/").glob("npc_*.png"))
+    if not image_paths:
+        print("Imagens de NPC não encontradas. Usando retângulo.")
+        default_image = pygame.Surface((100, 80))
+        default_image.fill((0, 0, 200)) # Azul
+    else:
+        for image_path in image_paths:
+            try:
+                image = pygame.image.load(image_path).convert_alpha()
+                npc_images.append(image)
+            except FileNotFoundError:
+                print(f"Imagem {image_path} não encontrada. Ignorando esta imagem.")
+
+    game_state = "MENU" # Estados possíveis: "MENU", "PLAYING", "GAME_OVER"
+    menu = Menu()
+
+    track = None
+    player = None
+    hud = None
+    active_npcs = [] # Lista de inimigos ativos na tela
+    npc_spawn_timer = 0
+    max_speed = 6.0  # Velocidade máxima do jogo
+    acceleration = 0.02 # O quão rápido ele chega na velocidade máxima
+
+    def reset_game():
+        """Zera todas as instâncias para uma nova partida limpa"""
+        nonlocal track, player, hud, active_npcs, npc_spawn_timer
+        track = Track()
+        track.speed = 0.0
+        player = Player()
+        hud = HUD()
+        active_npcs = []
+        npc_spawn_timer = 0
+    
     running = True
 
     while running:
@@ -23,15 +61,96 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     running = False
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            player.move_left(track_left=track_rect.left)
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            player.move_right(track_right=track_rect.right)
-        
-        track.update()
-        track_rect = track.draw(screen)
-        player_rect = player.draw(screen)
+            # --- CONTROLE DOS MENUS VIA TECLADO ---
+                if event.key == pygame.K_RETURN: # Tecla ENTER
+                    if game_state == "MENU":
+                        reset_game()
+                        game_state = "PLAYING"
+                    elif game_state == "GAME_OVER":
+                        reset_game()
+                        game_state = "MENU"
+
+        # ==========================================
+        # ESTADO 1: TELA DE MENU INICIAL
+        # ==========================================
+        if game_state == "MENU":
+            menu.draw_main_menu(screen)
+
+        # ==========================================
+        # ESTADO 2: JOGO RODANDO
+        # ==========================================
+        elif game_state == "PLAYING":
+
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+                player.move_left(track_left=track_rect.left)
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                player.move_right(track_right=track_rect.right)
+            
+            # --- NOVO: CONTROLE DE COLISÃO E ACELERAÇÃO ---
+            current_time = pygame.time.get_ticks()
+            
+            # Verifica se o jogador bateu há menos de 1.5s (1500ms)
+            is_crashed = player.invincible and (current_time - player.last_collision_time < 1500)
+
+            if is_crashed:
+                track.speed = 0.0  # Pista e faixas param completamente
+            else:
+                # Aceleração normal retoma após 1.5s
+                if track.speed < max_speed:
+                    track.speed += acceleration
+
+            # --- GERADOR DE INIMIGOS (SPAWNER) ---
+            npc_spawn_timer += 1
+            # Sorteia um inimigo a cada ~1 a 3 segundos (assumindo 60 FPS)
+            if npc_spawn_timer > random.randint(60, 180) and track.speed > 1:
+                npc_spawn_timer = 0
+                # Nasce um inimigo no horizonte
+                novo_npc = NPC(track.horizon_y, npc_images)
+                active_npcs.append(novo_npc)
+
+            track.update()
+            player.update_invincibility() # Atualiza o estado de invencibilidade do jogador
+            hud.update(track.speed)
+
+            for npc in active_npcs:
+                npc.update(track.speed, track.horizon_y)
+                
+            # Remove os NPCs que já passaram muito da base da tela ou passaram do horizonte (para otimizar)
+            active_npcs = [npc for npc in active_npcs if track.horizon_y < npc.y <= SCREEN_HEIGHT + 400]
+
+            track_rect = track.draw(screen)
+            
+            active_npcs.sort(key=lambda n: n.y) # Isso garante que o carro de trás não seja desenhado por cima do carro da frente!
+            
+            for npc in active_npcs:
+                npc_rect = npc.draw(screen, track) # Agora passamos a track inteira para ele saber calcular a curva
+
+                # VERIFICAÇÃO DE COLISÃO
+                # Só checa se o NPC estiver na tela e o jogador NÃO for invencível
+                if npc_rect and player_rect.colliderect(npc_rect) and not player.invincible:
+                    player.lives -= 1
+                    player.invincible = True
+                    player.last_collision_time = pygame.time.get_ticks()
+                    
+                    # Penalidade de velocidade (estilo Enduro)
+                    track.speed = 0.0 
+                    
+                    if player.lives <= 0:
+                        game_state = "GAME_OVER"
+                
+            player_rect = player.draw(screen)
+            hud.draw(screen, player, track.speed)
+
+        # ==========================================
+        # ESTADO 3: GAME OVER
+        # ==========================================
+        elif game_state == "GAME_OVER":
+            # Repare que nós NÃO damos screen.fill(black) aqui.
+            # Como a lógica pulou pro Game Over e parou de atualizar o PLAYING, 
+            # o último frame da batida continua na tela e o menu.draw_game_over pinta a 
+            # película escura por cima!
+            menu.draw_game_over(screen, hud.score)
 
         pygame.display.flip() # Atualiza a tela
         clock.tick(FPS) # Controla a taxa de quadros por segundo
