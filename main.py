@@ -3,6 +3,7 @@ import random
 import pygame
 import sys
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
+from src.core.scoreboard import Scoreboard
 from src.entities.track import Track
 from src.entities.player import Player
 from src.entities.npc import NPC
@@ -16,46 +17,43 @@ def main():
     clock = pygame.time.Clock()
     pygame.mixer.init() # Inicia o sistema de som
     
-    # Carrega a Música (Deixe em loop infinito)
-    pygame.mixer.music.load("assets/sounds/tokyo-drift-soundtrack.wav")
-    pygame.mixer.music.set_volume(0.4) # Música de fundo (mais baixa)
+    # --- CARREGAMENTO DE ASSETS ---
+    try:
+        # Carrega a Música (Deixe em loop infinito)
+        pygame.mixer.music.load("assets/sounds/tokyo-drift-soundtrack.wav")
+        pygame.mixer.music.set_volume(0.4) # Música de fundo (mais baixa)
+        # Carrega o Som de Game Over
+        game_over_sound = pygame.mixer.Sound("assets/sounds/spongebob_fail.mp3")
+        # Carrega o Som da Batida
+        crash_sound = pygame.mixer.Sound("assets/sounds/explosion.wav")
+        # Carrega as imagens de fundo (parallax)
+        cloud_image = pygame.image.load("assets/images/clouds.jpg").convert_alpha()
+        mountain_image = pygame.image.load("assets/images/mount.png").convert_alpha()
+        # Carrega as imagens dos NPCs
+        npc_images = [pygame.image.load(image_path).convert_alpha() for image_path in pathlib.Path("assets/images/").glob("npc_*.png")]
+        grass_images = [pygame.image.load(grass_path).convert_alpha() for grass_path in pathlib.Path("assets/images/").glob("grassandflowers*.png")]
+    except FileNotFoundError as e:
+        print(f"Erro ao carregar asset: {e}")
+        print("Certifique-se de que todos os arquivos necessários estão na pasta 'assets'.")
+        pygame.quit()
+        sys.exit()
 
-    game_over_sound = pygame.mixer.Sound("assets/sounds/spongebob_fail.mp3")
-    
-    # Carrega o Som da Batida
-    crash_sound = pygame.mixer.Sound("assets/sounds/explosion.wav")
-    crash_sound.set_volume(0.8) # Batida alta para assustar/punir
-    # Carrega as imagens dos NPCs
-    npc_images = []
-    image_paths = list(pathlib.Path("assets/images/").glob("npc_*.png"))
-    if not image_paths:
-        print("Imagens de NPC não encontradas. Usando retângulo.")
-        default_image = pygame.Surface((100, 80))
-        default_image.fill((0, 0, 200)) # Azul
-    else:
-        for image_path in image_paths:
-            try:
-                image = pygame.image.load(image_path).convert_alpha()
-                npc_images.append(image)
-            except FileNotFoundError:
-                print(f"Imagem {image_path} não encontrada. Ignorando esta imagem.")
-
+    # --- Configurações iniciais do jogo ---
+    scoreboard = Scoreboard()
     game_state = "MENU" # Estados possíveis: "MENU", "PLAYING", "GAME_OVER"
     menu = Menu()
-
     track = None
     player = None
     hud = None
     active_npcs = [] # Lista de inimigos ativos na tela
     npc_spawn_timer = 0
-    max_speed = 6.0  # Velocidade máxima do jogo
+    max_speed = 7.0  # Velocidade máxima do jogo
     acceleration = 0.02 # O quão rápido ele chega na velocidade máxima
 
     def reset_game():
         """Zera todas as instâncias para uma nova partida limpa"""
         nonlocal track, player, hud, active_npcs, npc_spawn_timer
-        pygame.mixer.music.play(-1) # O -1 faz a música repetir para sempre
-        track = Track()
+        track = Track(grass_images, cloud_image, mountain_image)
         track.speed = 0.0
         player = Player()
         hud = HUD()
@@ -69,17 +67,24 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
+                # O ESC agora volta do ranking pro menu, ou fecha o jogo
                 if event.key == pygame.K_ESCAPE:
-                    running = False
+                    if game_state == "LEADERBOARD":
+                        game_state = "MENU"
+                    else:
+                        running = False
 
             # --- CONTROLE DOS MENUS VIA TECLADO ---
                 if event.key == pygame.K_RETURN: # Tecla ENTER
                     if game_state == "MENU":
                         reset_game()
                         game_state = "PLAYING"
+                        pygame.mixer.music.play(-1) # O -1 faz a música repetir para sempre
                     elif game_state == "GAME_OVER":
                         reset_game()
                         game_state = "MENU"
+                elif event.key == pygame.K_TAB and game_state == "MENU":
+                    game_state = "LEADERBOARD"
 
         # ==========================================
         # ESTADO 1: TELA DE MENU INICIAL
@@ -150,9 +155,12 @@ def main():
                     
                     if player.lives <= 0:
                         game_over_sound.play() # Toca o som de game over
+                        scoreboard.save_score(hud.score)
                         game_state = "GAME_OVER"
                 
             player_rect = player.draw(screen)
+            # Vai escurecer/tingir o cenário, os inimigos e o jogador!
+            track.draw_time_overlay(screen)
             hud.draw(screen, player, track.speed)
 
         # ==========================================
@@ -161,6 +169,13 @@ def main():
         elif game_state == "GAME_OVER":
             pygame.mixer.music.stop() # Para a música de fundo
             menu.draw_game_over(screen, hud.score)
+
+        # ==========================================
+        # ESTADO 4: LEADERBOARD
+        # ==========================================
+        elif game_state == "LEADERBOARD":
+            # Passamos a lista de scores que já está na memória da classe Scoreboard
+            menu.draw_leaderboard(screen, scoreboard.scores)
 
         pygame.display.flip() # Atualiza a tela
         clock.tick(FPS) # Controla a taxa de quadros por segundo
