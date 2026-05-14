@@ -8,10 +8,12 @@ class Menu:
         # Tenta carregar uma fonte retrô customizada (se você baixar e colocar na pasta)
         try:
             self.title_font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 60)
+            self.subtitle_font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 30)
             self.game_over_font = pygame.font.Font("assets/fonts/PressStart2P.ttf", 50)
         except FileNotFoundError:
             # Fallback: Se não achar o arquivo, usa a Impact (nativa, grossa e pesada)
             self.title_font = pygame.font.SysFont("Impact", 80)
+            self.subtitle_font = pygame.font.SysFont("Impact", 20)
             self.game_over_font = pygame.font.SysFont("Impact", 70)
 
         # Fonte menor para as instruções
@@ -25,12 +27,56 @@ class Menu:
         title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
         surface.blit(title_text, title_rect)
 
+        # Subtítulo
+        subtitle_text = self.subtitle_font.render("UM REMAKE USANDO PYGAME", True, (200, 200, 200))
+        subtitle_rect = subtitle_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+        surface.blit(subtitle_text, subtitle_rect)
+
         # Instrução de Start (com efeitinho de piscar)
         current_time = pygame.time.get_ticks()
         if (current_time // 500) % 2 == 0: # Pisca a cada 500ms
             start_text = self.text_font.render("Pressione ENTER para Jogar", True, (255, 255, 255))
             start_rect = start_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
             surface.blit(start_text, start_rect)
+        
+        rank_text = self.text_font.render("Pressione TAB para ver o Ranking", True, (150, 150, 150))
+        rank_rect = rank_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
+        surface.blit(rank_text, rank_rect)
+
+    def draw_leaderboard(self, surface, scores):
+        """Desenha a tela com os 5 melhores tempos."""
+        surface.fill((10, 10, 20)) # Fundo escuro
+        
+        # Título da tela
+        title = self.game_over_font.render("TOP 5 RANKING", True, (100, 255, 100))
+        title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 80))
+        surface.blit(title, title_rect)
+
+        # Cabeçalhos
+        header = self.text_font.render("POS   DISTÂNCIA    DATA", True, (200, 200, 200))
+        surface.blit(header, (SCREEN_WIDTH // 2 - 180, 160))
+
+        # Lista os scores
+        y_offset = 220
+        if not scores:
+            vazio = self.text_font.render("Nenhuma corrida registrada.", True, (100, 100, 100))
+            surface.blit(vazio, (SCREEN_WIDTH // 2 - 180, y_offset))
+        else:
+            for i, entry in enumerate(scores):
+                # Formata a linha (Ex: "1.    1520 m       14/05/2026")
+                linha = f"{i+1}.    {entry['score']:<8} m  {entry['date']}"
+                
+                # Destaca o primeiro lugar em amarelo
+                cor = (255, 255, 100) if i == 0 else (255, 255, 255) 
+                
+                linha_text = self.text_font.render(linha, True, cor)
+                surface.blit(linha_text, (SCREEN_WIDTH // 2 - 180, y_offset))
+                y_offset += 50
+
+        # Instrução para voltar
+        voltar = self.text_font.render("Pressione ESC para voltar", True, (150, 150, 150))
+        voltar_rect = voltar.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
+        surface.blit(voltar, voltar_rect)
 
     def draw_game_over(self, surface, final_score):
         # Efeito Fade: Cria uma película escura semi-transparente por cima do jogo pausado
