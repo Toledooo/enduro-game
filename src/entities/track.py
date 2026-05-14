@@ -16,12 +16,31 @@ class Track:
         self.state_timer = 0
         self.straight_durations = [10 * 60, 12 * 60] # Define o tempo da primeira reta: entre 10 e 12 segundos (x 60 FPS)
         self.curve_durations = [3 * 60, 5 * 60] # Define o tempo da primeira curva: entre 3 e 5 segundos (x 60 FPS)
-        self.curve_choices = [-0.3, 0.3] # Curvas possíveis: esquerda, direita ou reta
+        self.curve_choices = [-0.3, 0.3] # Curvas possíveis: esquerda, direita ou reta        
+        # --- Parallax do Céu ---
+        self.sky_offset = 0.0
+        try:
+            # Carrega a imagem e força ela a ocupar a largura da tela e a altura do horizonte
+            original_sky = pygame.image.load("assets/images/clouds.jpg").convert_alpha()
+            self.sky_image = pygame.transform.scale(original_sky, (SCREEN_WIDTH, self.horizon_y))
+        except FileNotFoundError:
+            print("Aviso: assets/images/nuvens.jpg não encontrada. Usando cor sólida.")
+            self.sky_image = None
 
     def update(self):
         # Se o carro tiver velocidade, as faixas se movem para baixo
         if self.speed > 0:
             # 1. Gerador de faixas no tempo
+
+            # Movimento do Céu (Mais lento que as montanhas para profundidade)
+            self.sky_offset -= self.current_curve * self.speed * 0.5
+            
+            # Loop infinito do céu
+            if self.sky_offset <= -SCREEN_WIDTH:
+                self.sky_offset += SCREEN_WIDTH
+            elif self.sky_offset >= SCREEN_WIDTH:
+                self.sky_offset -= SCREEN_WIDTH
+
             self.state_timer += 1
 
             if self.state_timer >= random.choice(self.straight_durations):
@@ -89,12 +108,14 @@ class Track:
         return (SCREEN_WIDTH // 2) + curve_shift
 
     def draw(self, surface):
-        # Cores (Garante que o DARK_GRASS exista caso não esteja no settings)
         DARK_GRASS = (30, 100, 30)
 
-        # Desenha o céu
-        sky_rect = pygame.Rect(0, 0, SCREEN_WIDTH, self.horizon_y)
-        pygame.draw.rect(surface, SKY_COLOR, sky_rect)
+        # 1. Desenha o Céu com Imagem (Parallax Infinito)
+        if self.sky_image:
+            # Desenha a imagem duas vezes para o loop ser invisível
+            surface.blit(self.sky_image, (int(self.sky_offset), 0))
+            surface.blit(self.sky_image, (int(self.sky_offset + SCREEN_WIDTH), 0))
+            surface.blit(self.sky_image, (int(self.sky_offset - SCREEN_WIDTH), 0))
 
         # Desenha a grama
         grass_rect = pygame.Rect(0, self.horizon_y, SCREEN_WIDTH, SCREEN_HEIGHT - self.horizon_y)

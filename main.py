@@ -14,7 +14,17 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Enduro Game")
     clock = pygame.time.Clock()
+    pygame.mixer.init() # Inicia o sistema de som
+    
+    # Carrega a Música (Deixe em loop infinito)
+    pygame.mixer.music.load("assets/sounds/tokyo-drift-soundtrack.wav")
+    pygame.mixer.music.set_volume(0.4) # Música de fundo (mais baixa)
 
+    game_over_sound = pygame.mixer.Sound("assets/sounds/spongebob_fail.mp3")
+    
+    # Carrega o Som da Batida
+    crash_sound = pygame.mixer.Sound("assets/sounds/explosion.wav")
+    crash_sound.set_volume(0.8) # Batida alta para assustar/punir
     # Carrega as imagens dos NPCs
     npc_images = []
     image_paths = list(pathlib.Path("assets/images/").glob("npc_*.png"))
@@ -44,6 +54,7 @@ def main():
     def reset_game():
         """Zera todas as instâncias para uma nova partida limpa"""
         nonlocal track, player, hud, active_npcs, npc_spawn_timer
+        pygame.mixer.music.play(-1) # O -1 faz a música repetir para sempre
         track = Track()
         track.speed = 0.0
         player = Player()
@@ -130,6 +141,7 @@ def main():
                 # Só checa se o NPC estiver na tela e o jogador NÃO for invencível
                 if npc_rect and player_rect.colliderect(npc_rect) and not player.invincible:
                     player.lives -= 1
+                    crash_sound.play() # Toca o som da batida
                     player.invincible = True
                     player.last_collision_time = pygame.time.get_ticks()
                     
@@ -137,6 +149,7 @@ def main():
                     track.speed = 0.0 
                     
                     if player.lives <= 0:
+                        game_over_sound.play() # Toca o som de game over
                         game_state = "GAME_OVER"
                 
             player_rect = player.draw(screen)
@@ -146,10 +159,7 @@ def main():
         # ESTADO 3: GAME OVER
         # ==========================================
         elif game_state == "GAME_OVER":
-            # Repare que nós NÃO damos screen.fill(black) aqui.
-            # Como a lógica pulou pro Game Over e parou de atualizar o PLAYING, 
-            # o último frame da batida continua na tela e o menu.draw_game_over pinta a 
-            # película escura por cima!
+            pygame.mixer.music.stop() # Para a música de fundo
             menu.draw_game_over(screen, hud.score)
 
         pygame.display.flip() # Atualiza a tela
