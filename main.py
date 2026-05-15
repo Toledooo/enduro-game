@@ -109,6 +109,9 @@ def main():
             # Verifica se o jogador bateu há menos de 1.5s (1500ms)
             is_crashed = player.invincible and (current_time - player.last_collision_time < 1500)
 
+            if hud.score >= 2000: # A partir de 2000 pontos, o jogo fica mais difícil (aceleração aumenta)
+                max_speed = 12.0
+
             if is_crashed:
                 track.speed = 0.0  # Pista e faixas param completamente
             else:
