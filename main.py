@@ -47,14 +47,14 @@ def main():
     hud = None
     active_npcs = [] # Lista de inimigos ativos na tela
     npc_spawn_timer = 0
-    max_speed = 7.0  # Velocidade máxima do jogo
     acceleration = 0.02 # O quão rápido ele chega na velocidade máxima
 
     def reset_game():
         """Zera todas as instâncias para uma nova partida limpa"""
-        nonlocal track, player, hud, active_npcs, npc_spawn_timer
+        nonlocal track, player, hud, active_npcs, npc_spawn_timer, max_speed
         track = Track(grass_images, cloud_image, mountain_image)
         track.speed = 0.0
+        max_speed = 7.0  # Velocidade máxima do jogo
         player = Player()
         hud = HUD()
         active_npcs = []
