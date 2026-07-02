@@ -21,7 +21,7 @@ class HUD:
         panel_height = 110
         # Posiciona no canto inferior direito, com uma margem de 20 pixels
         panel_x = SCREEN_WIDTH - panel_width - 20
-        panel_y = SCREEN_HEIGHT - panel_height - 20
+        panel_y = SCREEN_HEIGHT - panel_height - 300
         
         # Desenha o fundo do painel (Cinza escuro, opaco)
         panel_rect = pygame.Rect(panel_x, panel_y, panel_width, panel_height)

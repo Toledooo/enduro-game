@@ -47,14 +47,14 @@ def main():
     hud = None
     active_npcs = [] # Lista de inimigos ativos na tela
     npc_spawn_timer = 0
-    max_speed = 7.0  # Velocidade máxima do jogo
     acceleration = 0.02 # O quão rápido ele chega na velocidade máxima
 
     def reset_game():
         """Zera todas as instâncias para uma nova partida limpa"""
-        nonlocal track, player, hud, active_npcs, npc_spawn_timer
+        nonlocal track, player, hud, active_npcs, npc_spawn_timer, max_speed
         track = Track(grass_images, cloud_image, mountain_image)
         track.speed = 0.0
+        max_speed = 7.0  # Velocidade máxima do jogo
         player = Player()
         hud = HUD()
         active_npcs = []
@@ -108,6 +108,9 @@ def main():
             
             # Verifica se o jogador bateu há menos de 1.5s (1500ms)
             is_crashed = player.invincible and (current_time - player.last_collision_time < 1500)
+
+            if hud.score >= 2000: # A partir de 2000 pontos, o jogo fica mais difícil (aceleração aumenta)
+                max_speed = 12.0
 
             if is_crashed:
                 track.speed = 0.0  # Pista e faixas param completamente

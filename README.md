@@ -1,4 +1,4 @@
-# Enduro - Pygame Remake
+# Enduro - Pygame Remake V1
 
 Este projeto é uma releitura do clássico jogo **Enduro** (1983), originalmente desenvolvido pela Activision para o Atari 2600. O objetivo é recriar a experiência de corrida de resistência, onde o jogador deve ultrapassar um número determinado de carros para avançar para o próximo dia, enfrentando variações climáticas e de visibilidade.
 
@@ -87,7 +87,7 @@ Este projeto utiliza recursos visuais e sonoros criados por terceiros. Agradecem
 
 **Artes Visuais (Imagens e Sprites):**
 
-- Carros (Player e NPCs): Criados por [Free Game Assets (GUI, Sprite, Tilesets)] - Obtido em: [[itch.io](https://itch.io/game-assets)]
+- Carros (Player e NPCs): Criados por [[freepik](https://www.magnific.com/author/freepik)] - Obtido em: [[magnific.com]([https://itch.io/game-assets](https://www.magnific.com/free-ai-image/8-bits-cars-gaming-assets_133331049.htm#fromView=search&page=1&position=4&uuid=5ca473f0-4418-44e3-8d87-dbd738bb7b3a&query=Pixel+car+back+view?log-in=google))]
 
 - Cenário (Montanhas e Nuvens): Criados por [Free Game Assets (GUI, Sprite, Tilesets)] - Obtido em: [[itch.io](https://free-game-assets.itch.io/)]
 
@@ -95,4 +95,4 @@ Este projeto utiliza recursos visuais e sonoros criados por terceiros. Agradecem
 
 **Tipografia:**
 
-- Fonte do Título: [Press Start 2P] por [CodeMan38] - Obtido em: [Google Fonts / Link da Fonte]
+- Fonte do Título: [Press Start 2P] por [CodeMan38] - Obtido em: [[Google Fonts](https://fonts.google.com/)]
