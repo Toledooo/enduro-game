@@ -19,7 +19,7 @@ class Menu:
         # Fonte menor para as instruções
         self.text_font = pygame.font.SysFont("Courier New", 24, bold=True)
 
-    def draw_main_menu(self, surface):
+    def draw_main_menu(self, surface, stage):
         surface.fill((10, 10, 20)) # Fundo escuro
         
         # Título do jogo
@@ -38,7 +38,20 @@ class Menu:
             start_text = self.text_font.render("Pressione ENTER para Jogar", True, (255, 255, 255))
             start_rect = start_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
             surface.blit(start_text, start_rect)
-        
+
+        # Seletor de Fase
+        stage_text = self.text_font.render(
+            "1: Verao   |   2: Inverno", True, (150, 150, 150)
+        )
+        stage_rect = stage_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 130))
+        surface.blit(stage_text, stage_rect)
+        sel_text = self.text_font.render(
+            f"Fase atual: {stage.display_name}",
+            True, stage.display_color
+        )
+        sel_rect = sel_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
+        surface.blit(sel_text, sel_rect)
+
         rank_text = self.text_font.render("Pressione TAB para ver o Ranking", True, (150, 150, 150))
         rank_rect = rank_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50))
         surface.blit(rank_text, rank_rect)

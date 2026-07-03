@@ -2,7 +2,8 @@ import pygame, random
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, ROAD_COLOR, WHITE, BORDER_COLOR
 
 class Track:
-    def __init__(self, grass_images_list, cloud_image, mountain_image):
+    def __init__(self, grass_images_list, cloud_image, mountain_image, stage):
+        self.stage = stage
         self.horizon_y = SCREEN_HEIGHT // 4 # Linha do horizonte em 1/4 da altura da tela
         self.road_width = SCREEN_WIDTH * 0.8 # Largura da estrada próxima ao jogador
         self.horizon_road_width = 0 # Largura da estrada no horizonte
@@ -17,7 +18,10 @@ class Track:
         self.straight_durations = [10 * 60, 12 * 60] # Define o tempo da primeira reta: entre 10 e 12 segundos (x 60 FPS)
         self.curve_durations = [3 * 60, 5 * 60] # Define o tempo da primeira curva: entre 3 e 5 segundos (x 60 FPS)
         self.curve_choices = [-0.3, 0.3] # Curvas possíveis: esquerda, direita ou reta    
-        self.grass_images = grass_images_list # Recebe a lista de imagens de grama do main.py
+        if self.stage.current == "winter":
+            self.grass_images = self.stage.patches
+        else:
+            self.grass_images = grass_images_list
         # --- Parallax do Céu ---
         self.sky_offset = 0.0
         self.sky_img = pygame.transform.scale(cloud_image, (SCREEN_WIDTH, self.horizon_y))
@@ -135,6 +139,8 @@ class Track:
             # Limpa as que saíram da tela
             self.lines_y = [item for item in self.lines_y if item['y'] <= SCREEN_HEIGHT]
 
+        self.stage.update_snowflakes()
+
     def get_center_x(self, y):
         """Calcula o centro X da pista com uma curva parabólica (Arco)."""
         scale = (y - self.horizon_y) / (SCREEN_HEIGHT - self.horizon_y)
@@ -173,7 +179,7 @@ class Track:
             surface.blit(self.overlay, (0, 0)) # Cola por cima de tudo
 
     def draw(self, surface):
-        DARK_GRASS = (30, 100, 30)
+        DARK_GRASS = self.stage.grass_color
 
         # Desenha o Céu com Imagem (Parallax Infinito)
         if self.sky_img:
@@ -282,5 +288,7 @@ class Track:
                 # Escala a imagem PNG sorteada e desenha na tela
                 scaled_img_R = pygame.transform.scale(item['right_img'], (patch_width_R, patch_height_R))
                 surface.blit(scaled_img_R, (int(right_patch_x), int(line_y)))
+
+        self.stage.draw_snowflakes(surface)
 
         return road_rect

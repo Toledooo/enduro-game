@@ -4,9 +4,11 @@ import pygame
 import sys
 from src.core.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS
 from src.core.scoreboard import Scoreboard
+from src.core.stage import Stage
 from src.entities.track import Track
 from src.entities.player import Player
 from src.entities.npc import NPC
+from src.entities.particle import spawn_spark_particles
 from src.ui.hud import HUD
 from src.ui.menu import Menu
 
@@ -41,7 +43,9 @@ def main():
     # --- Configurações iniciais do jogo ---
     scoreboard = Scoreboard()
     game_state = "MENU" # Estados possíveis: "MENU", "PLAYING", "GAME_OVER"
+    stage = Stage()
     menu = Menu()
+    spark_group = pygame.sprite.Group()
     track = None
     player = None
     hud = None
@@ -52,7 +56,9 @@ def main():
     def reset_game():
         """Zera todas as instâncias para uma nova partida limpa"""
         nonlocal track, player, hud, active_npcs, npc_spawn_timer, max_speed
-        track = Track(grass_images, cloud_image, mountain_image)
+        stage.setup()
+        spark_group.empty()
+        track = Track(grass_images, cloud_image, mountain_image, stage)
         track.speed = 0.0
         max_speed = 7.0  # Velocidade máxima do jogo
         player = Player()
@@ -85,12 +91,14 @@ def main():
                         game_state = "MENU"
                 elif event.key == pygame.K_TAB and game_state == "MENU":
                     game_state = "LEADERBOARD"
+                elif game_state == "MENU":
+                    stage.handle_key(event.key)
 
         # ==========================================
         # ESTADO 1: TELA DE MENU INICIAL
         # ==========================================
         if game_state == "MENU":
-            menu.draw_main_menu(screen)
+            menu.draw_main_menu(screen, stage)
 
         # ==========================================
         # ESTADO 2: JOGO RODANDO
@@ -150,6 +158,8 @@ def main():
                 if npc_rect and player_rect.colliderect(npc_rect) and not player.invincible:
                     player.lives -= 1
                     crash_sound.play() # Toca o som da batida
+                    crash_rect = player_rect.clip(npc_rect)
+                    spark_group.add(spawn_spark_particles(crash_rect.centerx, crash_rect.centery, 20))
                     player.invincible = True
                     player.last_collision_time = pygame.time.get_ticks()
                     
@@ -162,6 +172,10 @@ def main():
                         game_state = "GAME_OVER"
                 
             player_rect = player.draw(screen)
+
+            spark_group.update()
+            spark_group.draw(screen)
+
             # Vai escurecer/tingir o cenário, os inimigos e o jogador!
             track.draw_time_overlay(screen)
             hud.draw(screen, player, track.speed)
